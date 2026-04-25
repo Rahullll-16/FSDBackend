@@ -5,6 +5,7 @@ const router = express.Router();
 
 import User from "../models/User.js";
 import Farmer from "../models/Farmer.js";
+import Crop from "../models/Crop.js"; // ✅ IMPORTANT
 // ✅ 1. FARMER PROFILE (PUT THIS FIRST)
 router.get("/farmer/:userId", async (req, res) => {
   try{
@@ -43,6 +44,10 @@ router.put("/farmer/:userId", async (req, res) => {
 });
 
 // ✅ 2. ALL FARMERS
+
+
+const router = express.Router();
+
 router.get("/all", async (req, res) => {
   try {
     const users = await Farmer.find();
@@ -64,7 +69,6 @@ router.get("/all", async (req, res) => {
     for (const u of users) {
       const sensor = sensors.find((s) => String(s._id) === String(u.userId));
 
-      // ✅ GET CROPS FOR THIS USER
       const crops = await Crop.find({ userId: u.userId });
 
       result.push({
@@ -72,11 +76,6 @@ router.get("/all", async (req, res) => {
         farmName: u.farmName,
         location: u.location,
         landSize: u.landSize,
-
-        // ❌ remove old
-        // cropType: u.cropType,
-
-        // ✅ NEW
         crops: crops.map((c) => c.name),
 
         temperature: sensor?.temperature || 0,
@@ -85,23 +84,12 @@ router.get("/all", async (req, res) => {
       });
     }
 
+    console.log("FINAL RESULT:", result);
+
     res.json(result);
   } catch (err) {
-    console.log(err);
+    console.log("ERROR:", err);
     res.status(500).json({ error: "Server error" });
-  }
-});
-
-
-// ✅ 3. SENSOR DATA
-router.get("/:userId", async (req, res) => {
-  try {
-    const data = await Sensor.find({ userId: req.params.userId })
-      .sort({ timestamp: -1 });
-
-    res.json(data);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
   }
 });
 
