@@ -1,28 +1,28 @@
 import express from "express";
 import Sensor from "../models/Sensor.js";
+import Farmer from "../models/Farmer.js";
+import Crop from "../models/Crop.js";
 
 const router = express.Router();
 
-import User from "../models/User.js";
-import Farmer from "../models/Farmer.js";
-import Crop from "../models/Crop.js"; // ✅ IMPORTANT
-// ✅ 1. FARMER PROFILE (PUT THIS FIRST)
+// ✅ 1. FARMER PROFILE
 router.get("/farmer/:userId", async (req, res) => {
-  try{
+  try {
     const farmer = await Farmer.findOne({ userId: req.params.userId });
 
-    if(!farmer){
+    if (!farmer) {
       return res.status(404).json({ error: "Farmer not found" });
     }
 
     res.json(farmer);
-
-  }catch(err){
+  } catch (err) {
     res.status(500).json({ error: "Server error" });
   }
 });
+
+// ✅ 2. UPDATE FARMER
 router.put("/farmer/:userId", async (req, res) => {
-  try{
+  try {
     console.log("👉 UPDATE HIT");
     console.log("PARAM:", req.params.userId);
     console.log("BODY:", req.body);
@@ -30,24 +30,19 @@ router.put("/farmer/:userId", async (req, res) => {
     const updated = await Farmer.findOneAndUpdate(
       { userId: req.params.userId },
       req.body,
-      { new: true }
+      { new: true },
     );
 
     console.log("UPDATED:", updated);
 
-    res.json({ success:true });
-
-  }catch(err){
+    res.json({ success: true });
+  } catch (err) {
     console.log("ERROR:", err);
-    res.status(500).json({ error:"Update failed" });
+    res.status(500).json({ error: "Update failed" });
   }
 });
 
-// ✅ 2. ALL FARMERS
-
-
-const router = express.Router();
-
+// ✅ 3. ALL FARMERS (MAIN FIXED ROUTE)
 router.get("/all", async (req, res) => {
   try {
     const users = await Farmer.find();
@@ -93,9 +88,17 @@ router.get("/all", async (req, res) => {
   }
 });
 
+// ✅ 4. SENSOR DATA BY USER
+router.get("/:userId", async (req, res) => {
+  try {
+    const data = await Sensor.find({ userId: req.params.userId }).sort({
+      timestamp: -1,
+    });
 
-
-// ✅ SECOND: GET DATA BY USER ID
-
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 export default router;
