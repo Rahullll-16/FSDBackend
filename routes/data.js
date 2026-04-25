@@ -44,7 +44,7 @@ router.put("/farmer/:userId", async (req, res) => {
 
 // ✅ 2. ALL FARMERS
 router.get("/all", async (req, res) => {
-  try{
+  try {
     const users = await Farmer.find();
 
     const sensors = await Sensor.aggregate([
@@ -54,30 +54,41 @@ router.get("/all", async (req, res) => {
           _id: "$userId",
           temperature: { $first: "$temperature" },
           humidity: { $first: "$humidity" },
-          soilMoisture: { $first: "$soilMoisture" }
-        }
-      }
+          soilMoisture: { $first: "$soilMoisture" },
+        },
+      },
     ]);
 
-    const result = users.map(u => {
-      const sensor = sensors.find(s => s._id === u.userId);
+    const result = [];
 
-      return {
+    for (const u of users) {
+      const sensor = sensors.find((s) => String(s._id) === String(u.userId));
+
+      // ✅ GET CROPS FOR THIS USER
+      const crops = await Crop.find({ userId: u.userId });
+
+      result.push({
         userId: u.userId,
         farmName: u.farmName,
         location: u.location,
-        cropType: u.cropType,
         landSize: u.landSize,
+
+        // ❌ remove old
+        // cropType: u.cropType,
+
+        // ✅ NEW
+        crops: crops.map((c) => c.name),
+
         temperature: sensor?.temperature || 0,
         humidity: sensor?.humidity || 0,
-        soilMoisture: sensor?.soilMoisture || 0
-      };
-    });
+        soilMoisture: sensor?.soilMoisture || 0,
+      });
+    }
 
     res.json(result);
-
-  }catch(err){
-    res.status(500).json({ error:"Server error" });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: "Server error" });
   }
 });
 
