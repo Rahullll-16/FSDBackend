@@ -105,50 +105,7 @@ router.get("/:userId", async (req, res) => {
   }
 });
 
-router.get("/all", async (req, res) => {
-  try{
 
-    // 🟢 GET ALL FARMERS
-    const users = await Farmer.find();
-
-    // 🟢 GET LATEST SENSOR DATA
-    const sensors = await Sensor.aggregate([
-      { $sort: { timestamp: -1 } },
-      {
-        $group: {
-          _id: "$userId",
-          temperature: { $first: "$temperature" },
-          humidity: { $first: "$humidity" },
-          soilMoisture: { $first: "$soilMoisture" }
-        }
-      }
-    ]);
-
-    // 🧠 MERGE BOTH
-    const result = users.map(u => {
-
-      const sensor = sensors.find(s => s._id === u.userId);
-
-      return {
-        userId: u.userId,
-        farmName: u.farmName,
-        location: u.location,
-        cropType: u.cropType,
-        landSize: u.landSize,
-
-        temperature: sensor?.temperature || 0,
-        humidity: sensor?.humidity || 0,
-        soilMoisture: sensor?.soilMoisture || 0
-      };
-    });
-
-    res.json(result);
-
-  }catch(err){
-    console.log(err);
-    res.status(500).json({ error:"Server error" });
-  }
-});
 
 // ✅ SECOND: GET DATA BY USER ID
 
